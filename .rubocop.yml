@@ -1,0 +1,13 @@
+AllCops:
+  TargetRubyVersion: 3.3.0
+  NewCops: disable
+Style/Documentation:
+  Enabled: false
+Style/SignalException:
+  EnforcedStyle: semantic
+Metrics/MethodLength:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
