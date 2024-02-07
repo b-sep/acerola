@@ -2,7 +2,7 @@
 
 CREATE TABLE clientes(
   id SMALLSERIAL PRIMARY KEY,
-  nome varchar NOT NULL,
+  nome VARCHAR NOT NULL,
   limite INTEGER NOT NULL
 );
 
