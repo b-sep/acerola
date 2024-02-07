@@ -13,6 +13,9 @@ GEM
     mustermann-contrib (3.0.0)
       hansi (~> 0.2.0)
       mustermann (= 3.0.0)
+    nio4r (2.7.0)
+    puma (6.4.2)
+      nio4r (~> 2.0)
     rack (2.2.8)
     ruby2_keywords (0.0.5)
 
@@ -21,6 +24,7 @@ PLATFORMS
 
 DEPENDENCIES
   hanami-api (~> 0.3.0)
+  puma (~> 6.4)
 
 BUNDLED WITH
    2.4.21
