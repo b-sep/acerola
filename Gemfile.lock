@@ -14,6 +14,7 @@ GEM
       hansi (~> 0.2.0)
       mustermann (= 3.0.0)
     nio4r (2.7.0)
+    pg (1.5.4)
     puma (6.4.2)
       nio4r (~> 2.0)
     rack (2.2.8)
@@ -24,6 +25,7 @@ PLATFORMS
 
 DEPENDENCIES
   hanami-api (~> 0.3.0)
+  pg (~> 1.5)
   puma (~> 6.4)
 
 BUNDLED WITH
