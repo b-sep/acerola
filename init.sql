@@ -1,14 +1,22 @@
 --
 
-CREATE TABLE clientes(
+CREATE TABLE customers(
   id SMALLSERIAL PRIMARY KEY,
-  nome VARCHAR NOT NULL,
-  limite INTEGER NOT NULL
+  name VARCHAR NOT NULL,
+  max_limit INTEGER NOT NULL
+);
+
+CREATE TABLE transactions(
+  id SERIAL PRIMARY KEY,
+  value INTEGER NOT NULL,
+  type VARCHAR(1) CHECK (type IN ('c', 'd')) NOT NULL,
+  description VARCHAR(10) NOT NULL,
+  created_at TIMESTAMP DEFAULT now() NOT NULL
 );
 
 DO $$
 BEGIN
-  INSERT INTO clientes (nome, limite)
+  INSERT INTO customers (name, max_limit)
   VALUES
     ('rubick', 1000 * 100),
     ('zeus', 800 * 100),
