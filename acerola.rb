@@ -3,15 +3,19 @@
 require 'hanami/api'
 require 'hanami/middleware/body_parser'
 require_relative './post_params_validator'
+require_relative './repository'
 
 class Acerola < Hanami::API
   use Hanami::Middleware::BodyParser, :json
 
-  post 'clients/:id/transacoes' do
-    result = PostParamsValidator.exec(**env['router.params'])
+  post 'clientes/:id/transacoes' do
+    params = env['router.params']
+    halt(422) unless PostParamsValidator.exec(**params)
+    customer = Repository.find_customer(params[:id])
+    halt(404) unless customer
 
-    halt(400) unless result
-  rescue ArgumentError => _e
-    halt(400)
+    result = Repository.perform_transaction(customer[:max_limit], params)
+
+    result ? [200, {}, json({ limite: customer[:max_limit], saldo: result[:value] })] : 422
   end
 end
