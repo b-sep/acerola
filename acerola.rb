@@ -18,4 +18,12 @@ class Acerola < Hanami::API
 
     result ? [200, {}, json({ limite: customer[:max_limit], saldo: result[:value] })] : 422
   end
+
+  get 'clientes/:id/extrato' do
+    params = env['router.params']
+    halt(422) if params[:id].match?(/\D/)
+
+    customer = Repository.find_customer(params[:id])
+    halt(404) unless customer
+  end
 end
