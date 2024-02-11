@@ -25,5 +25,7 @@ class Acerola < Hanami::API
 
     customer = Repository.find_customer(params[:id])
     halt(404) unless customer
+
+    [200, {}, json(Repository.statement(customer))]
   end
 end
