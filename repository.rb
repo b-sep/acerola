@@ -35,6 +35,41 @@ class Repository
     result_insert&.merge(result_update)&.transform_keys(&:to_sym)
   end
 
+  def self.statement(customer)
+    query_transactions = <<~SQL
+      SELECT value, type, description, created_at FROM transactions where customer_id = $1
+      ORDER BY created_at DESC
+      LIMIT 10
+    SQL
+
+    query_balance = <<~SQL
+      SELECT value from balances where id = $1
+    SQL
+
+    result_transactions = conn.exec_params(query_transactions, [customer[:id]]).to_a
+    result_balance = conn.exec_params(query_balance, [customer[:id]]).first
+
+    {
+      saldo: {
+        total: result_balance['value'].to_i,
+        data_extrato: Time.now.to_s,
+        limite: customer[:max_limit].to_i
+      },
+      ultimas_transacoes: if result_transactions.empty?
+                            []
+                          else
+                            result_transactions.map do |t|
+                              {
+                                valor: t['value'].to_i,
+                                tipo: t['type'],
+                                descricao: t['description'],
+                                realizado_em: t['created_at']
+                              }
+                            end
+                          end
+    }
+  end
+
   def self.conn
     @conn ||= PG.connect(
       host: 'acerola_db',
