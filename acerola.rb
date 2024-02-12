@@ -14,9 +14,9 @@ class Acerola < Hanami::API
     customer = Repository.find_customer(params[:id])
     halt(404) unless customer
 
-    result = Repository.perform_transaction(customer[:max_limit], params)
+    result = Repository.perform_transaction(params)
 
-    result ? [200, {}, json({ limite: customer[:max_limit], saldo: result[:value] })] : 422
+    result ? [200, {}, json(result)] : 422
   end
 
   get 'clientes/:id/extrato' do

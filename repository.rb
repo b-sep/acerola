@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'pg'
+require 'connection_pool'
 
 class Repository
   def self.find_customer(id)
@@ -8,31 +9,42 @@ class Repository
       SELECT * FROM customers WHERE id = $1
     SQL
 
-    result = conn.exec_params(query, [id]).first
+    result = pool.with do |conn|
+      conn.exec_params(query, [id]).first
+    end
 
     result&.transform_keys(&:to_sym)
   end
 
-  def self.perform_transaction(customer_limit, params)
-    return nil if params[:tipo] == 'd' && cannot_withdraw?(customer_limit, params)
+  def self.perform_transaction(params)
+    result = {}
 
     insert_transaction = <<~SQL
       INSERT INTO transactions(value, type, description, customer_id)
       VALUES ($1, $2, $3, $4)
-      RETURNING id
     SQL
 
-    update_balance = <<~SQL
-      UPDATE balances
-      SET value = value #{params[:tipo] == 'c' ? '+' : '-'} $1
-      WHERE customer_id = $2
-      RETURNING value
+    update_balance_customer = <<~SQL
+      UPDATE customers
+      SET balance = balance #{params[:tipo] == 'c' ? '+' : '-'} $1
+      WHERE id = $2
+      RETURNING max_limit, balance
     SQL
 
-    result_insert = conn.exec_params(insert_transaction, Array(params.values)).first
-    result_update = conn.exec_params(update_balance, [params[:valor], params[:id]]).first
+    pool.with do |c|
+      c.transaction do |conn|
+        # insert transaction
+        conn.exec_params(insert_transaction, params.values)
+        # update customer balance
+        temp = conn.exec_params(update_balance_customer, [params[:valor], params[:id]]).first
 
-    result_insert&.merge(result_update)&.transform_keys(&:to_sym)
+        result = { limite: temp['max_limit'].to_i, saldo: temp['balance'].to_i }
+      end
+    end
+
+    result
+  rescue PG::CheckViolation => _e
+    nil
   end
 
   def self.statement(customer)
@@ -42,16 +54,15 @@ class Repository
       LIMIT 10
     SQL
 
-    query_balance = <<~SQL
-      SELECT value from balances where id = $1
-    SQL
-
-    result_transactions = conn.exec_params(query_transactions, [customer[:id]]).to_a
-    result_balance = conn.exec_params(query_balance, [customer[:id]]).first
+    result_transactions = pool.with do |c|
+      c.transaction do |conn|
+        conn.exec_params(query_transactions, [customer[:id]]).to_a
+      end
+    end
 
     {
       saldo: {
-        total: result_balance['value'].to_i,
+        total: customer[:balance].to_i,
         data_extrato: Time.now.to_s,
         limite: customer[:max_limit].to_i
       },
@@ -70,25 +81,17 @@ class Repository
     }
   end
 
-  def self.conn
-    @conn ||= PG.connect(
-      host: 'acerola_db',
-      user: 'postgres',
-      password: 'acerola',
-      port: 5432,
-      dbname: 'postgres'
-    )
+  def self.pool
+    @pool ||= ConnectionPool.new(size: 10, timeout: 30) do
+      PG.connect(
+        host: 'acerola_db',
+        user: 'postgres',
+        password: 'acerola',
+        port: 5432,
+        dbname: 'postgres'
+      )
+    end
   end
 
-  def self.cannot_withdraw?(customer_limit, params)
-    query = <<~SQL
-      SELECT value FROM balances where id = $1
-    SQL
-
-    result = conn.exec_params(query, [params[:id]]).first
-
-    (result['value'].to_i - params[:valor].to_i) < -customer_limit.to_i
-  end
-
-  private_class_method :conn, :cannot_withdraw?
+  private_class_method :pool
 end
