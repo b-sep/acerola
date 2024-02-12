@@ -13,7 +13,7 @@ module PostParamsValidator
     return false unless value.instance_of?(Integer)
     return false if value.zero? || value.negative?
     return false unless type.instance_of?(String)
-    return false unless %w[c d].include?(type.downcase)
+    return false unless %w[c d].include?(type)
     return false unless description.instance_of?(String)
     return false if description.empty? || description.size > 10
 
