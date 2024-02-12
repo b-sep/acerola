@@ -3,7 +3,8 @@
 CREATE TABLE customers(
   id SERIAL PRIMARY KEY,
   name VARCHAR NOT NULL,
-  max_limit INTEGER NOT NULL
+  max_limit INTEGER NOT NULL,
+  balance INTEGER CHECK (balance >= -max_limit) NOT NULL
 );
 
 CREATE TABLE transactions(
@@ -15,22 +16,13 @@ CREATE TABLE transactions(
   created_at TIMESTAMP DEFAULT now() NOT NULL
 );
 
-CREATE TABLE balances(
-  id SERIAL PRIMARY KEY,
-  customer_id INTEGER REFERENCES customers(id),
-  value INTEGER NOT NULL
-);
-
 DO $$
 BEGIN
-  INSERT INTO customers (name, max_limit)
+  INSERT INTO customers (name, max_limit, balance)
   VALUES
-    ('rubick', 1000 * 100),
-    ('zeus', 800 * 100),
-    ('killua', 10000 * 100),
-    ('freeza', 100000 * 100),
-    ('gohan', 5000 * 100);
-
-  INSERT INTO balances(customer_id, value)
-    SELECT id, 0 FROM customers;
+    ('rubick', 1000 * 100, 0),
+    ('zeus', 800 * 100, 0),
+    ('killua', 10000 * 100, 0),
+    ('freeza', 100000 * 100, 0),
+    ('gohan', 5000 * 100, 0);
 END; $$
