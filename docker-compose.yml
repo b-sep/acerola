@@ -16,9 +16,7 @@ services:
           cpus: '0.5'
           memory: '300mb'
   acerola01: &acerola01
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/b-sep/acerola:latest
     container_name: acerola01
     volumes:
       - gems:/usr/local/bundle
