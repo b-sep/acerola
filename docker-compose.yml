@@ -2,10 +2,9 @@ services:
   acerola_db:
     image: postgres:16.1-alpine3.19
     container_name: acerola_db
-    env_file:
-      - .env
     environment:
       TZ: America/Sao_Paulo
+      POSTGRES_PASSWORD: acerola
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
@@ -18,9 +17,6 @@ services:
   acerola01: &acerola01
     image: ghcr.io/b-sep/acerola:latest
     container_name: acerola01
-    volumes:
-      - gems:/usr/local/bundle
-      - .:/acerola
     depends_on:
       - acerola_db
     deploy:
@@ -46,6 +42,3 @@ services:
         limits:
           cpus: '0.1'
           memory: '10mb'
-
-volumes:
-  gems:
